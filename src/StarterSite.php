@@ -15,6 +15,10 @@ class StarterSite extends Site {
 		add_filter( 'timber/twig', array( $this, 'add_to_twig' ) );
 		add_filter( 'timber/twig/environment/options', [ $this, 'update_twig_environment_options' ] );
 
+		add_action( 'wp_enqueue_scripts', array( $this, 'add_theme_scripts' ) );
+
+		add_action( 'acf/init', array( $this, 'acf_init_blocks' ) );
+
 		parent::__construct();
 	}
 
@@ -30,6 +34,16 @@ class StarterSite extends Site {
 	 */
 	public function register_taxonomies() {
 
+	}
+
+	public function add_theme_scripts() {
+		$cssFilePath = glob( get_template_directory() . '/assets/build/css/main.min.*.css' );
+		$cssFileURI = get_template_directory_uri() . '/assets/build/css/' . basename($cssFilePath[0]);
+		wp_enqueue_style( 'main_css', $cssFileURI );
+		
+		$jsFilePath = glob( get_template_directory() . '/assets/build/js/main.min.*.js' );
+		$jsFileURI = get_template_directory_uri() . '/assets/build/js/' . basename($jsFilePath[0]);
+		wp_enqueue_script( 'main_js', $jsFileURI , null , null , true );
 	}
 
 	/**
@@ -141,5 +155,15 @@ class StarterSite extends Site {
 	    // $options['autoescape'] = true;
 
 	    return $options;
+	}
+
+	public function acf_init_blocks() {
+		// Bail out if function doesn’t exist.
+		if (!function_exists('acf_register_block')) {
+			return;
+		}
+		require_once __DIR__ . '/AcfBlocks.php';
+		$acfBlocks = new AcfBlocks();
+		$acfBlocks->register_blocks();
 	}
 }

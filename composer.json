@@ -3,6 +3,7 @@
   "description": "Starter theme to build a Timber theme",
   "type":"wordpress-theme",
   "license": "MIT",
+  "minimum-stability" : "rc",
   "authors": [
     {
       "email": "jared@upstatement.com",
@@ -16,7 +17,7 @@
     }
   ],
   "require": {
-    "timber/timber": "2.x-dev"
+    "timber/timber": "2.x"
   },
   "require-dev": {
     "automattic/wordbless": "^0.4.2",
