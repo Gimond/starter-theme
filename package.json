@@ -25,6 +25,8 @@
     "eslint-plugin-jsx-a11y": "^6.5.1",
     "eslint-plugin-react": "^7.28.0",
     "eslint-plugin-react-hooks": "^4.3.0",
+    "ignore-emit-webpack-plugin": "^2.0.6",
+    "image-minimizer-webpack-plugin": "^4.0.0",
     "mini-css-extract-plugin": "^2.6.1",
     "postcss": "^8.1.7",
     "postcss-cli": "^10.0.0",

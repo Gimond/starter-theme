@@ -1,8 +1,7 @@
 ## Team
 
-Your name or company
-https://yoursite.example
-@your_twitter_handle
+Pierre Gimond
+https://www.gimond.fr
 
 
 ## Site

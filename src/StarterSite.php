@@ -9,18 +9,27 @@ class StarterSite extends Site
 {
 	public function __construct()
 	{
+		// setup
 		add_action('after_setup_theme', array($this, 'theme_supports'));
 		add_action('after_setup_theme', array($this, 'textdomain'));
+		add_action('after_setup_theme', array($this, 'add_image_sizes'));
 		add_action('init', array($this, 'register_post_types'));
 		add_action('init', array($this, 'register_taxonomies'));
 
+		// rewrite rules
+		// add_action('init', array($this, 'custom_rewrite_rule'), 10, 0);
+
+		// admin
+		add_action('admin_init', array($this, 'add_editor_styles'));
+		// add_action('admin_menu', array($this, 'custom_admin_menu'));
+
+		// timber
 		add_filter('timber/context', array($this, 'add_to_context'));
 		add_filter('timber/twig', array($this, 'add_to_twig'));
 		add_filter('timber/twig/environment/options', [$this, 'update_twig_environment_options']);
 
+		// scripts / styles
 		add_action('wp_enqueue_scripts', array($this, 'add_theme_scripts'));
-
-		add_action('acf/init', array($this, 'acf_init_blocks'));
 
 		parent::__construct();
 	}
@@ -41,11 +50,13 @@ class StarterSite extends Site
 
 	public function add_theme_scripts()
 	{
+		// CSS
 		$cssFilePath = glob(get_template_directory() . '/assets/build/css/main.min.*.css');
 		$cssFileURI = get_template_directory_uri() . '/assets/build/css/' . basename($cssFilePath[0]);
 		wp_enqueue_style('main_css', $cssFileURI);
 
-		$jsFilePath = glob(get_template_directory() . '/assets/build/js/main.min.*.js');
+		// JS
+		$jsFilePath = glob(get_template_directory() . '/assets/build/js/index.min.*.js');
 		$jsFileURI = get_template_directory_uri() . '/assets/build/js/' . basename($jsFilePath[0]);
 		wp_enqueue_script('main_js', $jsFileURI, null, null, true);
 	}
@@ -57,11 +68,10 @@ class StarterSite extends Site
 	 */
 	public function add_to_context($context)
 	{
-		$context['foo']   = 'bar';
-		$context['stuff'] = 'I am a value set in your functions.php file';
-		$context['notes'] = 'These values are available everytime you call Timber::context();';
 		$context['menu']  = Timber::get_menu();
+		// $context['menu_footer']  = Timber::get_menu('footer');
 		$context['site']  = $this;
+		$context['is_front_page'] = is_front_page();
 
 		return $context;
 	}
@@ -127,17 +137,6 @@ class StarterSite extends Site
 	}
 
 	/**
-	 * his would return 'foo bar!'.
-	 *
-	 * @param string $text being 'foo', then returned 'foo bar!'.
-	 */
-	public function myfoo($text)
-	{
-		$text .= ' bar!';
-		return $text;
-	}
-
-	/**
 	 * This is where you can add your own functions to twig.
 	 *
 	 * @param Twig\Environment $twig get extension.
@@ -150,7 +149,8 @@ class StarterSite extends Site
 		 */
 		// $twig->addExtension( new Twig\Extension\StringLoaderExtension() );
 
-		$twig->addFilter(new Twig\TwigFilter('myfoo', [$this, 'myfoo']));
+		$twig->addFunction(new Twig\TwigFunction('svg', [$this, 'get_inline_svg']));
+		$twig->addFunction(new Twig\TwigFunction('get_attachment_image', [$this, 'get_attachment_image']));
 
 		return $twig;
 	}
@@ -171,14 +171,77 @@ class StarterSite extends Site
 		return $options;
 	}
 
-	public function acf_init_blocks()
+	public function add_image_sizes()
 	{
-		// Bail out if function doesn’t exist.
-		if (!function_exists('acf_register_block')) {
-			return;
+		// width x height x crop
+		$image_sizes = [
+			// '1920x1080x0'
+		];
+
+		foreach ($image_sizes as $image_size) {
+			list($width, $height, $crop) = explode('x', $image_size);
+			$crop = ($crop == '1');
+			add_image_size($image_size, $width, $height, $crop);
 		}
-		require_once __DIR__ . '/AcfBlocks.php';
-		$acfBlocks = new AcfBlocks();
-		$acfBlocks->register_blocks();
+	}
+
+	public function custom_rewrite_rule()
+	{
+		add_rewrite_tag('%newtag%', '([^&]+)');
+		add_rewrite_rule('^newpage/([^&]+)/?', 'index.php?page_id=1234&newtag=$matches[1]', 'top');
+	}
+
+	public function add_editor_styles()
+	{
+		$cssFilePath = glob(get_template_directory() . '/assets/build/css/editor.min.*.css');
+		$cssFileURI = get_template_directory_uri() . '/assets/build/css/' . basename($cssFilePath[0]);
+		add_editor_style($cssFileURI);
+	}
+
+	public function custom_admin_menu()
+	{
+		remove_menu_page('edit.php');
+		remove_menu_page('wpseo_dashboard');
+		remove_menu_page('wpseo_workouts');
+	}
+
+	/**
+	 * Return html of an svg for inline embedding
+	 *
+	 * @param string $filename of svg in static assets folder.
+	 */
+	public function get_inline_svg($filename)
+	{
+		$html = '';
+		$file = get_template_directory_uri() . '/assets/static/img/svg/' . $filename . '.svg';
+		$content = file_get_contents($file);
+		$className = 'svg-%name';
+
+		if ($content === FALSE) {
+			return $html;
+		} else {
+			$uid = uniqid();
+			$content = preg_replace('/<svg/', '<svg role="presentation"', $content);
+			preg_match('/([^\\/\\\\]+)\.svg$/i', $file, $matches);
+
+			if (count($matches) === 2) {
+				$content = preg_replace('/\sid=(["\'])([^"\']+)(["\'])/', ' id=$1' . $matches[1] . '-$2-' . $uid . '$3', $content);
+				$content = preg_replace('/url\(#([^)]+)\)/', 'url(#' . $matches[1] . '-$1-' . $uid . ')', $content);
+				$content = preg_replace('/\sxlink:href=(["\'])#([^"\']+)(["\'])/', ' xlink:href=$1#' . $matches[1] . '-$2-' . $uid . '$3 ', $content);
+
+				$content = preg_replace('/<svg/', '<svg class="' . preg_replace('/%name/', $matches[1], $className) . '"', $content);
+			}
+			$html = $content;
+		}
+
+		return $html;
+	}
+
+	public function get_attachment_image($attachment_id, $size = 'thumbnail', $icon = false)
+	{
+		if (is_object($attachment_id)) {
+			$attachment_id = $attachment_id->ID;
+		}
+		return wp_get_attachment_image($attachment_id, $size, $icon);
 	}
 }
