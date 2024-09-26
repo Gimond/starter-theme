@@ -1,8 +1,6 @@
 const path = require("path");
 const fs = require('fs');
-const express = require('express');
 const IgnoreEmitPlugin = require('ignore-emit-webpack-plugin');
-const app = express();
 
 // css extraction and minification
 const MiniCssExtractPlugin = require("mini-css-extract-plugin"); 
@@ -26,7 +24,7 @@ for (let i = 0; i < chucksCSS.length; i++) {
 module.exports = [
   {
     entry: {
-      index: ["./assets/src/js/index.js"],
+      index: ["./assets/src/js/index.ts"],
       css: ["./assets/src/js/css.js"],
     },
     output: {
@@ -44,6 +42,12 @@ module.exports = [
     devtool: 'source-map',
     module: {
       rules: [
+        // typescript compilation
+        {
+          test: /\.tsx?$/,
+          use: 'ts-loader',
+          exclude: /node_modules/,
+        },
         // js babelization
         {
           test: /\.(js|jsx)$/,
@@ -122,7 +126,7 @@ module.exports = [
       // css extraction into dedicated file
       new MiniCssExtractPlugin({
         filename: ({ chunk }) =>
-        `./css/${chunk.name}.min.[fullhash].css`,
+          `./css/${chunk.name}.min.[fullhash].css`,
         // filename: "./assets/build/css/[name].min.[fullhash].css",
       }),
       //pour les images qui ne passent pas directement par code css ou js
@@ -141,45 +145,45 @@ module.exports = [
         // css minification
         new CssMinimizerPlugin(),
         // image minification
-				new ImageMinimizerPlugin( {
-					minimizer: {
-						implementation: ImageMinimizerPlugin.imageminMinify,
-						options: {
-							// Lossless optimization with custom option
-							// Feel free to experiment with options for better result for you
-							plugins: [
-								[ 'gifsicle', { interlaced: true } ],
-								[ 'jpegtran', { progressive: true } ],
-								[ 'optipng', { optimizationLevel: 5 } ],
-								[
-									'svgo',
-									{
-										plugins: [
-											{
-												name: 'preset-default',
-												params: {
-													overrides: {
-														removeViewBox: false,
-														removeUselessStrokeAndFill: false,
-														removeUnknownsAndDefaults: false,
-														addAttributesToSVGElement: {
-															params: {
-																attributes: [
-																	{ xmlns: 'http://www.w3.org/2000/svg' },
-																],
-															},
-														},
-													},
-												},
-											},
-										],
-									},
-								],
-							],
-						},
-					},
-					concurrency: 5, //Parallelisation des taches pour optimiser la rapidité du build
-				} ),
+        new ImageMinimizerPlugin( {
+          minimizer: {
+            implementation: ImageMinimizerPlugin.imageminMinify,
+            options: {
+              // Lossless optimization with custom option
+              // Feel free to experiment with options for better result for you
+              plugins: [
+                [ 'gifsicle', { interlaced: true } ],
+                [ 'jpegtran', { progressive: true } ],
+                [ 'optipng', { optimizationLevel: 5 } ],
+                [
+                  'svgo',
+                  {
+                    plugins: [
+                      {
+                        name: 'preset-default',
+                        params: {
+                          overrides: {
+                            removeViewBox: false,
+                            removeUselessStrokeAndFill: false,
+                            removeUnknownsAndDefaults: false,
+                            addAttributesToSVGElement: {
+                              params: {
+                                attributes: [
+                                  { xmlns: 'http://www.w3.org/2000/svg' },
+                                ],
+                              },
+                            },
+                          },
+                        },
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+          },
+          concurrency: 5, //Parallelisation des taches pour optimiser la rapidité du build
+        } ),
       ],
       splitChunks: {
         cacheGroups: {

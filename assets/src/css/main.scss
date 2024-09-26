@@ -1,3 +1,11 @@
-body {
-  background-color: rgb(55, 179, 80);
-}
+@import "variables";
+@import "normalize";
+@import "fonts";
+
+// MIXINS
+@import "mixins/fit";
+@import "mixins/font";
+
+// COMPONENTS
+@import "components/headings";
+@import "components/button";
