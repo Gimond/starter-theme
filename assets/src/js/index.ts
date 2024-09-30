@@ -1,10 +1,9 @@
-// import helloWorld from "./components/hello";
+import { Application } from "@hotwired/stimulus";
+import { definitionsFromContext } from "@hotwired/stimulus-webpack-helpers"
 
-// helloWorld(); 
+declare const window: any
+declare const Stimulus: any
 
-const world = 'world';
-
-export function hello(who: string = world): string {
-  return `Hello ${who}! `;
-}
- 
+window.Stimulus = Application.start()
+const context = require.context("./controllers", true, /\.js$/)
+Stimulus.load(definitionsFromContext(context))

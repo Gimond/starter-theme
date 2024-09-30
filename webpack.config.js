@@ -32,6 +32,9 @@ module.exports = [
       assetModuleFilename: './img/[name][ext]',
       path: path.resolve( __dirname, 'assets/build' ),
     },
+    resolve: { 
+      extensions: ['.ts', '.tsx', '.js', '.jsx', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.tiff', '.ico', '.css', '.scss'],
+    },
     // Ne pas rebuild les fichiers non modifié
     cache: {
       type: 'filesystem',  // Utilisation du cache basé sur le système de fichiers

@@ -1,7 +1,12 @@
 {
     "compilerOptions": {
+        "moduleResolution": "node",
         "noImplicitAny": true,
         "target": "ES5",
-        "module": "ES2015"
+        "module": "ES2015",
+        "types": [
+            "node",
+            "webpack-env"
+        ]
     }
 }
